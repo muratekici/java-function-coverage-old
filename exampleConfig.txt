@@ -1,0 +1,2 @@
+me.ivanyu.javaagentsdemo.client.ClientMain
+me.ivanyu.javaagentsdemo.client.ClientMain@Adder
