@@ -29,3 +29,39 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
+## Overview
+
+Java Function Coverage is a java agent that instruments the specified classes before load time. It collects the function coverage data for all the methods in those classes. The agent must be passed to the jvm with -javaagent option. The agent will instrument the bytecodes of the classes before they load into memory. 
+
+## Quickstart
+
+```bash
+# Get the package from Github and install it from main directory of the package
+$ mvn package
+```
+
+## How To Use It
+
+```bash
+$ java -javaagent:path/to/agent.jar=path/to/config [other args...]
+```
+
+### config file
+
+config is the whitelist of classes to get coverage data, see the example in the repo
+
+### Example Usage
+
+You have a jar file that you want to get production coverage data (lets call it fun.jar)
+
+```bash
+$ java -javaagent:path/to/agent.jar=path/to/config -jar fun.jar
+```
+Agent will write coverage data to coverage.out periodically in the following format, you have to interrupt the agent to stop it. 
+
+```
+packageName1.className1.function1:coverage1
+packageName2.className2.function2:coverage2
+packageName3.className3.function3:coverage3
+...
+```
