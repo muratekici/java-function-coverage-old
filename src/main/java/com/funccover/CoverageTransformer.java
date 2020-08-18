@@ -53,8 +53,6 @@ public class CoverageTransformer implements ClassFileTransformer {
                 return null;
             }
 
-            System.out.println(className + ":" + loader);
-
             boolean flag = false;
             for(CtMethod method: ct.getDeclaredMethods()) {
                 if (method.isEmpty()) {
