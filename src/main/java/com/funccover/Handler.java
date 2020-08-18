@@ -1,46 +1,72 @@
+//Copyright 2020 Google LLC
+
+//Licensed under the Apache License, Version 2.0 (the "License");
+//you may not use this file except in compliance with the License.
+//You may obtain a copy of the License at
+//
+//    https://www.apache.org/licenses/LICENSE-2.0
+//
+//Unless required by applicable law or agreed to in writing, software
+//distributed under the License is distributed on an "AS IS" BASIS,
+//WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//See the License for the specific language governing permissions and
+//limitations under the License.
+
 package com.funccover;
 
-import java.io.File;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.lang.Thread;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.lang.instrument.Instrumentation;
-import java.nio.file.Files;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.lang.Thread;
 import java.util.ArrayList;
 import java.io.File; 
 import java.io.FileWriter;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Executors;
 
-public class Handler implements Runnable {
-        
+public class Handler {
+
     private ArrayList<String> methodNames;
-    private ArrayList<AtomicBoolean> methodCounters;
-    
-    public Handler(ArrayList<String> methodNames, ArrayList<AtomicBoolean> methodCounters) {
+    private ArrayList<Boolean> methodCounters;    
+
+    public Handler(ArrayList<String> methodNames, ArrayList<Boolean> methodCounters) {
         this.methodNames = methodNames;
         this.methodCounters = methodCounters;
     }
 
-    public void run() {
-        try {
-            File myObj = new File("coverage.out");
-            myObj.createNewFile();
-            FileWriter myWriter = new FileWriter("coverage.out");
-            final int len = methodNames.size();
-            for(int i = 0; i < len; i++) {
-                myWriter.write(methodNames.get(i) + ":");
-                if(methodCounters.get(i).get()) myWriter.write("1\n");
-                else myWriter.write("0\n");    
+    public void start() {
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable runnable) {
+               Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+               thread.setDaemon(true);
+               return thread;
             }
-            myWriter.close();
-        } catch (IOException e) {
-            System.out.println("An error occurred while writing the coverage data");
-            e.printStackTrace();
-        }
+        });
+        scheduler.scheduleWithFixedDelay(new Runner(), 500, 500, TimeUnit.MILLISECONDS);
     }
+
+    public class Runner implements Runnable {
+
+        public void run() {
+            
+            try {
+                File myObj = new File("coverage.out");
+                myObj.createNewFile();
+                FileWriter myWriter = new FileWriter("coverage.out");
+                final int len = methodNames.size();
+                for(int i = 0; i < len; i++) {
+                    myWriter.write(methodNames.get(i) + ":");
+                    if(methodCounters.get(i)) myWriter.write("1\n");
+                    else myWriter.write("0\n");    
+                }
+                myWriter.close();
+            } catch (IOException e) {
+                System.out.println("An error occurred while writing the coverage data");
+                e.printStackTrace();
+            }
+        } 
+    }
+
 }

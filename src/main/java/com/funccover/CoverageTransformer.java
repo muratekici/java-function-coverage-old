@@ -18,9 +18,6 @@ import java.io.ByteArrayInputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -32,16 +29,9 @@ public class CoverageTransformer implements ClassFileTransformer {
 
     private static int counter = 0;
 
-    private static Consumer<String> registerAddCounterFunction = (s) -> { };
-    private static Consumer<Integer> registerSetCounterFunction = (d) -> { };
-    
-    private final Predicate<String> whiteList;
     private final ClassPool classPool = ClassPool.getDefault();
 
-    CoverageTransformer(Predicate<String> whiteList, Consumer<String> registerAddCounter, Consumer<Integer> registerSetCounter) {
-        this.whiteList = whiteList;
-        registerAddCounterFunction = registerAddCounter;
-        registerSetCounterFunction = registerSetCounter;
+    CoverageTransformer() {
     }
 
     @Override
@@ -49,11 +39,7 @@ public class CoverageTransformer implements ClassFileTransformer {
                             Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
                             byte[] classfileBuffer) throws IllegalClassFormatException {
         
-        if (className.startsWith("com/funccover")) {
-            return null;
-        }
-
-        if (!whiteList.test(className)) {
+        if(filter(className) == false || classBeingRedefined != null) {
             return null;
         }
         
@@ -67,6 +53,8 @@ public class CoverageTransformer implements ClassFileTransformer {
                 return null;
             }
 
+            System.out.println(className + ":" + loader);
+
             boolean flag = false;
             for(CtMethod method: ct.getDeclaredMethods()) {
                 if (method.isEmpty()) {
@@ -77,7 +65,6 @@ public class CoverageTransformer implements ClassFileTransformer {
             }
 
             if (flag) {
-                System.out.println("Instrumented: " + className);
                 result = ct.toBytecode();
             }
             ct.detach();
@@ -88,17 +75,18 @@ public class CoverageTransformer implements ClassFileTransformer {
     }
 
     private static <T extends CtBehavior> void instrumentMethod(T target) throws CannotCompileException {
-        addCounter(target.getLongName());
-        target.insertBefore("com.funccover.CoverageTransformer.setCounter(" + counter + ");");
+        Metrics.addCounter(target.getLongName());
+        target.insertBefore("com.funccover.Metrics.setCounter(" + counter + ");");
         counter++;
     }
 
-    /** Used by instrumentation code. */
-    public static void addCounter(final String methodName) {
-        registerAddCounterFunction.accept(methodName);
-    }
-
-    public static void setCounter(final int id) {
-        registerSetCounterFunction.accept(id);
+    private boolean filter(String name) {
+        if (name.startsWith("com/funccover")) {
+            return false;
+        }
+        if (name.startsWith("java") || name.startsWith("jdk") || name.startsWith("sun")) { 
+            return false;
+        }
+        return true;
     }
 }

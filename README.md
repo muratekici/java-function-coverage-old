@@ -42,22 +42,28 @@ $ mvn package
 
 ## How To Use It
 
+You can use the default handler
 ```bash
-$ java -javaagent:path/to/agent.jar=path/to/config [other args...]
+$ java -javaagent:path/to/agent.jar [other args...]
 ```
 
-### config file
-
-config is the whitelist of classes to get coverage data, see the example in the repo
+You can use a custom handler, first argument is the path to custom handlers directory, second argument is the full class name. Agent will invode start() method in given class.
+```bash
+$ java -javaagent:path/to/agent.jar="path/to/handler/directory packageName.ClassName" [other args...]
+```
 
 ### Example Usage
 
-You have a jar file that you want to get production coverage data (lets call it fun.jar)
+You have a jar file that you want to get production coverage data with your custom handler Handler.class in /dir/custom/handler directory, assume package name is custom.handler. You want to instrument fun.jar
 
 ```bash
-$ java -javaagent:path/to/agent.jar=path/to/config -jar fun.jar
+$ java -javaagent:path/to/agent.jar="/dir custom.handler.Handler" -jar fun.jar
 ```
-Agent will write coverage data to coverage.out periodically in the following format, you have to interrupt the agent to stop it. 
+
+Agent will create an instance of Handler with Metric arrays as parameters, then call the start function in it. If you want to use default handler which will write the coverage data to coverage.out wile every 500ms, use:
+```bash
+$ java -javaagent:path/to/agent.jar -jar fun.jar
+```
 
 ```
 packageName1.className1.function1:coverage1
