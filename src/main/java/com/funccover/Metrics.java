@@ -16,17 +16,22 @@ package com.funccover;
 
 import java.util.ArrayList;
 
+// Metrics class saves the coverage data
+// Every index corresponds to one method, transforment calls addCounter with methods
+// Then it inserts a call to setCounter method with corresponding index to each method
 public class Metrics {
         
     public static ArrayList<String> methodNames = new ArrayList<String>(); 
     public static ArrayList<Boolean> methodCounters = new ArrayList<Boolean>(); 
 
+    // Inserts a new counter and name
     public static void addCounter(final String methodName) {
         methodNames.add(methodName);
         methodCounters.add(false);
        
     }
 
+    // Sets the given counters value to true
     public static void setCounter(final int index) {
         methodCounters.set(index, true);
     }

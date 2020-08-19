@@ -25,35 +25,50 @@ import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtMethod;
 
+// CoverageTransformer implements a class that will be used in instrumentation
 public class CoverageTransformer implements ClassFileTransformer {
 
+    // Keeps the number methods instrumented so far 
     private static int counter = 0;
 
+    // Javassist claspool that keeps the classes 
     private final ClassPool classPool = ClassPool.getDefault();
 
     CoverageTransformer() {
+        // empty
     }
 
+    // transform instruments given bytecode and returns instrumented bytecode
+    // if it returns null, then given class will be loaded without instrumentation
     @Override
     public byte[] transform(ClassLoader loader, String className,
                             Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
                             byte[] classfileBuffer) throws IllegalClassFormatException {
         
+        // if we do not want to instrument given class, return null
         if(filter(className) == false || classBeingRedefined != null) {
             return null;
         }
         
         byte[] result = null;
         try {
+            // Creates a new class with the given bytecode
             CtClass ct = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
+
+            // checks if the class is already loaded
             if (ct.isFrozen()) {
                 return null;
             }
+
+            // filter for instrumentation
             if (ct.isPrimitive() || ct.isArray() || ct.isAnnotation() || ct.isEnum() || ct.isInterface()) {
                 return null;
             }
 
+            // flag is true if instrumented
             boolean flag = false;
+            
+            // Iterates over all methods and instruments them
             for(CtMethod method: ct.getDeclaredMethods()) {
                 if (method.isEmpty()) {
                     continue;
@@ -72,12 +87,14 @@ public class CoverageTransformer implements ClassFileTransformer {
         return result;
     }
 
+    // Inserts a new method to Metrics and inserts setCounter call to the given method
     private static <T extends CtBehavior> void instrumentMethod(T target) throws CannotCompileException {
         Metrics.addCounter(target.getLongName());
         target.insertBefore("com.funccover.Metrics.setCounter(" + counter + ");");
         counter++;
     }
 
+    // filter returns true if we will instrument given class 
     private boolean filter(String name) {
         if (name.startsWith("com/funccover")) {
             return false;

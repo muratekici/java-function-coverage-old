@@ -25,6 +25,8 @@ import java.lang.reflect.Method;
 
 public class CoverageAgent {
     
+    // premain method starts executing by the jvm before main method
+    // it initializes the Handler and instrumenter
     public static void premain(String args, Instrumentation inst) {
         if(args == null || args == "") {
             initializeHandler();
@@ -37,23 +39,36 @@ public class CoverageAgent {
             }
             initializeCustomHandler(tokens[0], tokens[1]);
         }
+        
+        // Adds out CoverageTransformer class as an insrumenter
+        // transform method will be called for every class being loaded after this line
         inst.addTransformer(new CoverageTransformer());
     }
 
+    // Loads the given class to the memory and invokes its start() method with Metrics
     private static void initializeCustomHandler(String path, String className) {
 
+        // handler keeps an instance of given class
+        // starts keeps the start() method
         File file = new File(path);
         Object handler = null;
         Method start = null;
         URLClassLoader cl = null;
 
         try {
+            // Creates a URLClassLoader with given url
             URL url = file.toURI().toURL();
             URL[] urls = new URL[]{url};
             cl = new URLClassLoader(urls);
+            
+            // Loads the className from given class path
             Class cls = cl.loadClass(className);
+
+            // Gets the constructor for given class with necessary parameters
             Constructor handlerConstructor = cls.getConstructor(new Class[] { Metrics.methodNames.getClass(), Metrics.methodCounters.getClass()} );
+            // Constructs a new instance of given class with Metrics variables
             handler = handlerConstructor.newInstance(Metrics.methodNames, Metrics.methodCounters);
+            // Sets the start method
             start = cls.getMethod("start");
         } catch (Exception e) {
             e.printStackTrace();
@@ -66,6 +81,7 @@ public class CoverageAgent {
         }
         
         try {
+            // invokes the start method of constructed handler then closes the URLClassLoader
             start.invoke(handler);
             cl.close();
         } catch (Exception e){
@@ -74,7 +90,7 @@ public class CoverageAgent {
         }
     }
 
-
+    // Initializes the handler with default one
     private static void initializeHandler() {
         Handler handler = new Handler(Metrics.methodNames, Metrics.methodCounters);
         handler.start();

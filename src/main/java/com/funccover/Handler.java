@@ -30,11 +30,14 @@ public class Handler {
     private ArrayList<String> methodNames;
     private ArrayList<Boolean> methodCounters;    
 
+    // Constructor that gets the Metrics fields
     public Handler(ArrayList<String> methodNames, ArrayList<Boolean> methodCounters) {
         this.methodNames = methodNames;
         this.methodCounters = methodCounters;
     }
 
+    // start function will be invoked at the beginning
+    // it creates a scheduler that will call a runnable every 500ms
     public void start() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, new ThreadFactory() {
             @Override
@@ -47,6 +50,8 @@ public class Handler {
         scheduler.scheduleWithFixedDelay(new Runner(), 500, 500, TimeUnit.MILLISECONDS);
     }
 
+    // Runner implements a Runnable that will write the coverage data
+    // run() will be called by scheduler every 500ms
     public class Runner implements Runnable {
 
         public void run() {
