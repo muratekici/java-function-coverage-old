@@ -83,7 +83,8 @@ public class CoverageAgent {
         try {
             // invokes the start method of constructed handler then closes the URLClassLoader
             start.invoke(handler);
-            cl.close();
+            // We won't close the cl because some other classes in the classpath of cl may be loaded after some time
+            // cl.close();
         } catch (Exception e){
             e.printStackTrace();
             System.out.println("Could not invoke the start() method in " + className);
