@@ -47,7 +47,7 @@ You can use the default handler
 $ java -javaagent:path/to/agent.jar [other args...]
 ```
 
-You can use a custom handler, first argument is the path to custom handlers directory, second argument is the full class name. Agent will invode start() method in given class.
+You can use a custom handler, first argument is the path to custom handlers directory, second argument is the full class name. Agent create an instance of given handler with Metrics class variables and will invoke start() method in created object.
 ```bash
 $ java -javaagent:path/to/agent.jar="path/to/handler/directory packageName.ClassName" [other args...]
 ```
@@ -60,7 +60,7 @@ You have a jar file that you want to get production coverage data with your cust
 $ java -javaagent:path/to/agent.jar="/dir custom.handler.Handler" -jar fun.jar
 ```
 
-Agent will create an instance of Handler with Metric arrays as parameters, then call the start function in it. If you want to use default handler which will write the coverage data to coverage.out wile every 500ms, use:
+Agent will create an instance of Handler with Metric arrays as parameters, then call the start function in it. If you want to use default handler which will write the coverage data to coverage.out file every 500ms, use default handler:
 ```bash
 $ java -javaagent:path/to/agent.jar -jar fun.jar
 ```
