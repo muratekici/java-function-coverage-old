@@ -31,7 +31,11 @@ public class CoverageTransformer implements ClassFileTransformer {
     // Keeps the number methods instrumented so far 
     private static int counter = 0;
 
-    // Javassist claspool that keeps the classes 
+    // the ClassPool object returned by getDefault() searches the default system search path
+    // If a program is running on a web application server such as JBoss and Tomcat, 
+    // the ClassPool object may not be able to find user classes
+    // In that case, an additional class path must be registered to the ClassPool.
+    // ClassPool used to compile inserted source code to bytecode
     private final ClassPool classPool = ClassPool.getDefault();
 
     CoverageTransformer() {
@@ -57,11 +61,13 @@ public class CoverageTransformer implements ClassFileTransformer {
 
             // checks if the class is already loaded
             if (ct.isFrozen()) {
+                ct.detach();
                 return null;
             }
 
             // filter for instrumentation
             if (ct.isPrimitive() || ct.isArray() || ct.isAnnotation() || ct.isEnum() || ct.isInterface()) {
+                ct.detach();
                 return null;
             }
 
@@ -80,6 +86,8 @@ public class CoverageTransformer implements ClassFileTransformer {
             if (flag) {
                 result = ct.toBytecode();
             }
+
+            // detach removes newly created class from cp to avoid unnecesarry memory consumption
             ct.detach();
         } catch (Throwable e) {
             e.printStackTrace();
