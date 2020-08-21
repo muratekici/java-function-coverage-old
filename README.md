@@ -92,7 +92,7 @@ $ mvn package
 
 You can find the agent.jar with dependencies in target folder.
 
-After building the agent, let's use it in sample Bazel project. we should run in the Bazel projects directory:
+After building the agent, let's use it in sample Bazel project. We should run bazel build command with following option in projects directory to build the program:
 
 ```bash
 $ bazel build --jvmopt="-javaagent:path/to/agent='jar:path/to/Handler.jar example.handler.Handler' " //:ProjectRunner
