@@ -42,22 +42,28 @@ $ mvn package
 
 ## How To Use It
 
+To attach the agent you should give the agent as an argument to jvm. Agent itself also has arguments. 
+
+* type can be "url", "jar" or "dir". 
+    * If its url, path/to/handler must be an url
+    * If its jar path/to/handler must be a path to a jar file  
+    * If its dir path/to/handler must be a path to a directory that contains .class files (folders must be structured same as jar files)
+    
+* packageName.ClassName argument must be the fully qualified name of the Handler class (example.handler.Handler in the sample Handler.java) that contains a start() method and necessary constructor. An instance of this class will be created during runtime and start() method will be called at the very beginning. See the Handler directory for example implementations.  
+
 ```bash
-$ java -javaagent:path/to/agent.jar=path/to/config [other args...]
+$  java -javaagent:path/to/agent.jar="type:path/to/handler packageName.ClassName" [other args..]
 ```
-
-### config file
-
-config is the whitelist of classes to get coverage data, see the example in the repo
 
 ### Example Usage
 
-You have a jar file that you want to get production coverage data (lets call it fun.jar)
+You have a jar file that you want to get production coverage data with your custom handler Handler.jar in /dir/Handler.jar directory, assume package name is custom.handler.MyImpl You want to instrument fun.jar
 
 ```bash
-$ java -javaagent:path/to/agent.jar=path/to/config -jar fun.jar
+$ java -javaagent:path/to/agent.jar="jar:/dir/Handler.jar custom.handler.MyImpl" -jar fun.jar
 ```
-Agent will write coverage data to coverage.out periodically in the following format, you have to interrupt the agent to stop it. 
+
+Agent will create an instance of Handler with Metrics arraylists as parameters, then call the start() method in it. If you want to use default handler which will write the coverage data to coverage.out file every 500ms and just before jvm exits, use default handler Handler.jar in the main directory. Output coverage.out will be as follows:
 
 ```
 packageName1.className1.function1:coverage1

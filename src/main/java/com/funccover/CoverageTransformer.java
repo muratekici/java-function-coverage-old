@@ -18,9 +18,6 @@ import java.io.ByteArrayInputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -28,46 +25,56 @@ import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtMethod;
 
+// CoverageTransformer implements a class that will be used in instrumentation
 public class CoverageTransformer implements ClassFileTransformer {
 
+    // Keeps the number methods instrumented so far 
     private static int counter = 0;
 
-    private static Consumer<String> registerAddCounterFunction = (s) -> { };
-    private static Consumer<Integer> registerSetCounterFunction = (d) -> { };
-    
-    private final Predicate<String> whiteList;
+    // the ClassPool object returned by getDefault() searches the default system search path
+    // If a program is running on a web application server such as JBoss and Tomcat, 
+    // the ClassPool object may not be able to find user classes
+    // In that case, an additional class path must be registered to the ClassPool.
+    // ClassPool used to compile inserted source code to bytecode
     private final ClassPool classPool = ClassPool.getDefault();
 
-    CoverageTransformer(Predicate<String> whiteList, Consumer<String> registerAddCounter, Consumer<Integer> registerSetCounter) {
-        this.whiteList = whiteList;
-        registerAddCounterFunction = registerAddCounter;
-        registerSetCounterFunction = registerSetCounter;
+    CoverageTransformer() {
+        // empty
     }
 
+    // transform instruments given bytecode and returns instrumented bytecode
+    // if it returns null, then given class will be loaded without instrumentation
     @Override
     public byte[] transform(ClassLoader loader, String className,
                             Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
                             byte[] classfileBuffer) throws IllegalClassFormatException {
         
-        if (className.startsWith("com/funccover")) {
-            return null;
-        }
-
-        if (!whiteList.test(className)) {
+        // if we do not want to instrument given class, return null
+        if(filter(className) == false || classBeingRedefined != null) {
             return null;
         }
         
         byte[] result = null;
         try {
+            // Creates a new class with the given bytecode
             CtClass ct = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
+
+            // checks if the class is already loaded
             if (ct.isFrozen()) {
-                return null;
-            }
-            if (ct.isPrimitive() || ct.isArray() || ct.isAnnotation() || ct.isEnum() || ct.isInterface()) {
+                ct.detach();
                 return null;
             }
 
+            // filter for instrumentation
+            if (ct.isPrimitive() || ct.isArray() || ct.isAnnotation() || ct.isEnum() || ct.isInterface()) {
+                ct.detach();
+                return null;
+            }
+
+            // flag is true if instrumented
             boolean flag = false;
+            
+            // Iterates over all methods and instruments them
             for(CtMethod method: ct.getDeclaredMethods()) {
                 if (method.isEmpty()) {
                     continue;
@@ -77,9 +84,10 @@ public class CoverageTransformer implements ClassFileTransformer {
             }
 
             if (flag) {
-                System.out.println("Instrumented: " + className);
                 result = ct.toBytecode();
             }
+
+            // detach removes newly created class from cp to avoid unnecesarry memory consumption
             ct.detach();
         } catch (Throwable e) {
             e.printStackTrace();
@@ -87,18 +95,21 @@ public class CoverageTransformer implements ClassFileTransformer {
         return result;
     }
 
+    // Inserts a new method to Metrics and inserts setCounter call to the given method
     private static <T extends CtBehavior> void instrumentMethod(T target) throws CannotCompileException {
-        addCounter(target.getLongName());
-        target.insertBefore("com.funccover.CoverageTransformer.setCounter(" + counter + ");");
+        Metrics.addCounter(target.getLongName());
+        target.insertBefore("com.funccover.Metrics.setCounter(" + counter + ");");
         counter++;
     }
 
-    /** Used by instrumentation code. */
-    public static void addCounter(final String methodName) {
-        registerAddCounterFunction.accept(methodName);
-    }
-
-    public static void setCounter(final int id) {
-        registerSetCounterFunction.accept(id);
+    // filter returns true if we will instrument given class 
+    private boolean filter(String name) {
+        if (name.startsWith("com/funccover")) {
+            return false;
+        }
+        if (name.startsWith("java") || name.startsWith("jdk") || name.startsWith("sun")) { 
+            return false;
+        }
+        return true;
     }
 }
