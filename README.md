@@ -71,3 +71,31 @@ packageName2.className2.function2:coverage2
 packageName3.className3.function3:coverage3
 ...
 ```
+
+### Example Usage with Bazel
+
+Let's first download the Bazel project in this address: https://github.com/bazelbuild/examples/tree/master/java-tutorial and install bazel: https://docs.bazel.build/versions/master/tutorial/java.html#install-bazel
+
+To generate a binary script that runs the program we normally use 
+
+```bash
+$ bazel build //:ProjectRunner
+```
+
+Assume we want to get coverage data for ProjectRunner using the default handler given in this repository.
+
+First build our agent in this repo using 
+
+```bash
+$ mvn package
+```
+
+You can find the agent.jar with dependencies in target folder.
+
+After building the agent, let's use it in sample Bazel project. We should run bazel build command with following option in projects directory to build the program:
+
+```bash
+$ bazel build --jvmopt="-javaagent:path/to/agent='jar:path/to/Handler.jar example.handler.Handler' " //:ProjectRunner
+```
+
+This will generate an executable in bazel-bin directory named ProjectRunner. If you run it, coverage data will be saved to coverage.out
