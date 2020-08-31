@@ -50,9 +50,11 @@ public class CoverageTransformer implements ClassFileTransformer {
                             byte[] classfileBuffer) throws IllegalClassFormatException {
         
         // if we do not want to instrument given class, return null
-        if(filter(className) == false || classBeingRedefined != null) {
+
+        if(classBeingRedefined != null || Filter.check(loader, className) == false) {
             return null;
         }
+
         
         byte[] result = null;
         try {
@@ -79,7 +81,8 @@ public class CoverageTransformer implements ClassFileTransformer {
                 if (method.isEmpty()) {
                     continue;
                 }
-                instrumentMethod(method);
+               // System.out.println(loader);
+                instrumentMethod(method, loader);
                 flag = true;
             }
 
@@ -95,21 +98,11 @@ public class CoverageTransformer implements ClassFileTransformer {
         return result;
     }
 
-    // Inserts a new method to Metrics and inserts setCounter call to the given method
-    private static <T extends CtBehavior> void instrumentMethod(T target) throws CannotCompileException {
-        Metrics.addCounter(target.getLongName());
-        target.insertBefore("com.funccover.Metrics.setCounter(" + counter + ");");
+    // Inserts a new method to CoverageMetrics and inserts setCounter call to the given method
+    private static <T extends CtBehavior> void instrumentMethod(T target, ClassLoader loader) throws CannotCompileException {
+        CoverageMetrics.addCounter(target.getLongName());
+        target.insertBefore("com.funccover.CoverageMetrics.setCounter(" + counter + ");");
         counter++;
     }
 
-    // filter returns true if we will instrument given class 
-    private boolean filter(String name) {
-        if (name.startsWith("com/funccover")) {
-            return false;
-        }
-        if (name.startsWith("java") || name.startsWith("jdk") || name.startsWith("sun")) { 
-            return false;
-        }
-        return true;
-    }
 }

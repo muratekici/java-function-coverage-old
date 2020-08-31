@@ -19,7 +19,7 @@ import java.util.ArrayList;
 // Metrics class saves the coverage data
 // Every index corresponds to one method, transforment calls addCounter with methods
 // Then it inserts a call to setCounter method with corresponding index to each method
-public class Metrics {
+public class CoverageMetrics {
         
     public static ArrayList<String> methodNames = new ArrayList<String>(); 
     public static ArrayList<Boolean> methodCounters = new ArrayList<Boolean>(); 
