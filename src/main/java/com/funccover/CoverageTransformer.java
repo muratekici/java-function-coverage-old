@@ -101,8 +101,13 @@ public class CoverageTransformer implements ClassFileTransformer {
     // Inserts a new method to CoverageMetrics and inserts setCounter call to the given method
     private static <T extends CtBehavior> void instrumentMethod(T target, ClassLoader loader) throws CannotCompileException {
         CoverageMetrics.addCounter(target.getLongName());
-        target.insertBefore("com.funccover.CoverageMetrics.setCounter(" + counter + ");");
-        counter++;
+        // fix the cannot compile error (no method body)
+        try { 
+            target.insertBefore("com.funccover.CoverageMetrics.setCounter(" + counter + ");");
+        }
+        catch (Exception e) {
+
+        }
     }
 
 }
