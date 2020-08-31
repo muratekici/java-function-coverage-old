@@ -7,15 +7,8 @@ class Filter {
         if(className.startsWith("com/funccover") || loader == null) {
             return false;
         }
-        while(loader != null) {
-            if(loader == CoverageMetrics.class.getClassLoader()) {
-                return true;
-            }
-            loader = loader.getParent();
-        }
-        if(CoverageMetrics.class.getClassLoader() == null) {
+        if(loader == CoverageMetrics.class.getClassLoader())
             return true;
-        }
         return false;
     }
 }
