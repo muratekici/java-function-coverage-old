@@ -24,6 +24,8 @@ import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtMethod;
+import javassist.Modifier;
+
 
 // CoverageTransformer implements a class that will be used in instrumentation
 public class CoverageTransformer implements ClassFileTransformer {
@@ -39,7 +41,7 @@ public class CoverageTransformer implements ClassFileTransformer {
     private final ClassPool classPool = ClassPool.getDefault();
 
     CoverageTransformer() {
-        // empty
+        classPool.importPackage("com.funccover.CoverageMetrics");
     }
 
     // transform instruments given bytecode and returns instrumented bytecode
@@ -99,15 +101,23 @@ public class CoverageTransformer implements ClassFileTransformer {
     }
 
     // Inserts a new method to CoverageMetrics and inserts setCounter call to the given method
-    private static <T extends CtBehavior> void instrumentMethod(T target, ClassLoader loader) throws CannotCompileException {
+    private static void instrumentMethod(CtMethod target, ClassLoader loader) throws CannotCompileException {
+        if(isNative(target)) {
+            return ;
+        }
         CoverageMetrics.addCounter(target.getLongName());
         // fix the cannot compile error (no method body)
         try { 
-            target.insertBefore("com.funccover.CoverageMetrics.setCounter(" + counter + ");");
+            target.insertBefore("CoverageMetrics.setCounter(" + counter + ");");
         }
         catch (Exception e) {
 
         }
+        counter++;
+    }
+
+    public static boolean isNative(CtMethod method) {
+        return Modifier.isNative(method.getModifiers());
     }
 
 }
