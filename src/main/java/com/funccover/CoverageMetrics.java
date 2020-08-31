@@ -25,7 +25,7 @@ public class CoverageMetrics {
     public static ArrayList<Boolean> methodCounters = new ArrayList<Boolean>(); 
 
     // Inserts a new counter and name
-    public static void addCounter(final String methodName) {
+    public static synchronized void addCounter(final String methodName) {
         methodNames.add(methodName);
         methodCounters.add(false);
        
