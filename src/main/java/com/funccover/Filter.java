@@ -7,6 +7,15 @@ class Filter {
         if(className.startsWith("com/funccover") || loader == null) {
             return false;
         }
-        return true;
+        while(loader != null) {
+            if(loader == CoverageMetrics.class.getClassLoader()) {
+                return true;
+            }
+            loader = loader.getParent();
+        }
+        if(CoverageMetrics.class.getClassLoader() == null) {
+            return true;
+        }
+        return false;
     }
 }
