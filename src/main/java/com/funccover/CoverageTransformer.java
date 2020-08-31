@@ -107,12 +107,7 @@ public class CoverageTransformer implements ClassFileTransformer {
         }
         CoverageMetrics.addCounter(target.getLongName());
         // fix the cannot compile error (no method body)
-        try { 
-            target.insertBefore("CoverageMetrics.setCounter(" + counter + ");");
-        }
-        catch (Exception e) {
-
-        }
+        target.insertBefore("CoverageMetrics.setCounter(" + counter + ");");
         counter++;
     }
 
