@@ -80,4 +80,5 @@ handler_path is bazel-bin/src/main/java/example/handler/libHandler.jar
 ```
 
 This will generate an executable inside ```bazel-bin/src/main/java/example/program/HelloWorld```.
-When you run it, coverage data will be saved to coverage.out
+When you run it, it will ask you to enter numbers in range [1-9] in a line then it will call f$numer function for each number you entered.
+coverage data will be saved to coverage.out
