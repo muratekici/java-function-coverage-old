@@ -21,7 +21,7 @@ public class HelloWorld {
 
     public static void main(String []args) {
         System.out.println("Hello World");
-        System.out.println("Enter some space seperated integers in the range [1..10] in a line in any order");
+        System.out.println("Enter some space seperated integers in the range [1..9] in a line in any order");
         System.out.println("Program will call the function f$number for each number");
         System.out.println("For example handler coverage.out will contain invoked function names, lets try it:");
         Scanner in = new Scanner(System.in);
