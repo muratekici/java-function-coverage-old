@@ -16,7 +16,7 @@ package example.handler;
 
 import java.util.ArrayList;
 
-public class AnotherHandler {
+public class SimpleHandler {
 
     private ArrayList<String> methodNames;
     private ArrayList<Boolean> methodCounters;    
