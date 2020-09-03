@@ -55,47 +55,29 @@ To attach the agent you should give the agent as an argument to jvm. Agent itsel
 $  java -javaagent:path/to/agent.jar="type:path/to/handler packageName.ClassName" [other args..]
 ```
 
-### Example Usage
-
-You have a jar file that you want to get production coverage data with your custom handler Handler.jar in /dir/Handler.jar directory, assume package name is custom.handler.MyImpl You want to instrument fun.jar
-
-```bash
-$ java -javaagent:path/to/agent.jar="jar:/dir/Handler.jar custom.handler.MyImpl" -jar fun.jar
-```
-
-Agent will create an instance of Handler with Metrics arraylists as parameters, then call the start() method in it. If you want to use default handler which will write the coverage data to coverage.out file every 500ms and just before jvm exits, use default handler Handler.jar in the main directory. Output coverage.out will be as follows:
-
-```
-packageName1.className1.function1:coverage1
-packageName2.className2.function2:coverage2
-packageName3.className3.function3:coverage3
-...
-```
-
 ### Example Usage with Bazel
+This repository implements a simple program to test the coverage tool.
 
-Let's first download the Bazel project in this address: https://github.com/bazelbuild/examples/tree/master/java-tutorial and install bazel: https://docs.bazel.build/versions/master/tutorial/java.html#install-bazel
-
-To generate a binary script that runs the program we normally use 
-
-```bash
-$ bazel build //:ProjectRunner
-```
-
-Assume we want to get coverage data for ProjectRunner using the default handler given in this repository.
-
-First build our agent in this repo using 
+First build funccover agent
 
 ```bash
-$ mvn package
+$ bazel build //src/main/java/com/funccover:funccover_deploy.jar
 ```
 
-You can find the agent.jar with dependencies in target folder.
-
-After building the agent, let's use it in sample Bazel project. We should run bazel build command with following option in projects directory to build the program:
+Then build the example handler in the repository
 
 ```bash
-$ bazel build --jvmopt="-javaagent:path/to/agent='jar:path/to/Handler.jar example.handler.Handler' " //:ProjectRunner
+$ bazel build //src/main/java/example/handler:Handler
 ```
 
-This will generate an executable in bazel-bin directory named ProjectRunner. If you run it, coverage data will be saved to coverage.out
+Then finally build the example program binary with the agent and handler
+
+```bash
+$ bazel build --jvmopt="-javaagent:agent_path='jar:handler_path example.handler.Handler' "  //src/main/java/example/program:HelloWorld 
+
+Here agent_path is bazel-bin/src/main/java/com/funccover/funccover_deploy.jar, 
+handler_path is bazel-bin/src/main/java/example/handler/libHandler.jar
+```
+
+This will generate an executable inside ```bazel-bin/src/main/java/example/program/HelloWorld```.
+When you run it, coverage data will be saved to coverage.out
